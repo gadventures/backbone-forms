@@ -1,23 +1,34 @@
 var $ = require('jquery'),
+    fs = require('fs'),
     _ = require('lodash'),
     Backbone = require('backbone'),
-    Handlebars = require('handlebars'),
     fields = require('./fields');
 
+Backbone.$ = $;
+
 var templates = {
-    form: require('./templates/form.hbs'),
-    fieldset: require('./templates/fieldset.hbs'),
-    field: require('./templates/field.hbs'),
-    field_errors: require('./templates/errors.hbs')
+    form: fs.readFileSync('./templates/form.hbs'),
+    fieldset: fs.readFileSync('./templates/fieldset.hbs'),
+    field: fs.readFileSync('./templates/field.hbs'),
+    field_errors: fs.readFileSync('./templates/errors.hbs'),
+    text: fs.readFileSync('./templates/input_text.hbs'),
+    email: fs.readFileSync('./templates/input_text.hbs'),
+    date: fs.readFileSync('./templates/input_date.hbs'),
+    select: fs.readFileSync('./templates/input_select.hbs'),
+    password: fs.readFileSync('./templates/input_text.hbs'),
+    checkbox: fs.readFileSync('./templates/input_checkbox.hbs'),
+    textarea: fs.readFileSync('./templates/textarea.hbs')
 };
 
 var Fieldset = Backbone.View.extend({
     initialize: function(options) {
         options = (options || {});
         _.bindAll(this);
+        var self = this;
 
         this.fieldset = options.fieldset;
-        this.template = templates.fieldset;
+        this.handlebars = options.form.handlebars;
+        this.template = this.handlebars.templates.fieldset;
     },
     getContextData: function() {
         return this.fieldset;
@@ -32,7 +43,8 @@ var Fieldset = Backbone.View.extend({
 var Form = module.exports = Backbone.View.extend({
     initialize: function(options) {
         options = (options || {});
-        _.bindAll(this, '_setSchema');
+        _.bindAll(this, '_setSchema', 'renderFieldSet');
+        var self = this;
 
         if (_.isEmpty(options.schema)) {
             throw new Error("You must pass a schema. See README");
@@ -42,7 +54,15 @@ var Form = module.exports = Backbone.View.extend({
             _.extend(templates, options.templates);
         }
 
-        this.template = templates.form;
+        this.handlebars = options.handlebars || require('handlebars');
+        this.handlebars.templates = {}; // Store compiled templates.
+        this._registerHandlebars();
+
+        _.each(templates, function(template, key) {
+            self.handlebars.templates[key] = self.handlebars.compile(template);
+        });
+
+        this.template = this.handlebars.templates.form;
 
         this.validateUrl = (options.validateUrl || this.validateUrl);
         this.schema = this._setSchema(options.schema);
@@ -70,7 +90,7 @@ _.extend(Form.prototype, {
     // Bind all fields to instances. Any time we wish to iterate over the
     // fields for other purposes can be done via the initialized fieldset.
     _initializeFields: function() {
-        var that = this;
+        var self = this;
         var formFields = _.cloneDeep(this.schema.fields);
 
         return _.map(formFields, function(field, index, list) {
@@ -110,12 +130,12 @@ _.extend(Form.prototype, {
 
             var fieldInstance = new fieldClass({
                 field: field,
-                templates: templates
+                handlebars: self.handlebars
             });
 
-            that._bindField(fieldInstance);
+            self._bindField(fieldInstance);
 
-            fieldInstance.listenTo(that, 'schema:change',
+            fieldInstance.listenTo(self, 'schema:change',
                     fieldInstance.updateFromSchema);
             return fieldInstance;
         });
@@ -151,6 +171,17 @@ _.extend(Form.prototype, {
         this.trigger('schema:change', this.schema);
         return schema;
     },
+
+    _registerHandlebars: function() {
+        // Given an object that describes a field, call it within that fields
+        // context with {{renderField}}
+        var self = this;
+        this.handlebars.registerHelper('renderWidget', function() {
+            var fieldTemplate = self.handlebars.templates[this.widget.input_type];
+            return new self.handlebars.SafeString(fieldTemplate(this));
+        });
+    },
+
 
     // Return fields that have errors.
     errors: function() {
@@ -210,8 +241,13 @@ _.extend(Form.prototype, {
     fieldsets: function() {
         var that = this;
 
+        // If no fieldsets, define it
+        if (!this.schema.fieldsets) {
+            this.schema.fieldsets = [];
+        }
+
         // If there is no fieldset defined, put all fields into it.
-        if (!this.schema.fieldsets.length) {
+        if (this.schema.fieldsets.length === 0) {
             var fields = _.keys(this.schema.fields);
             this.schema.fieldsets.push({fields: fields});
         }
@@ -238,12 +274,10 @@ _.extend(Form.prototype, {
         return this.fields;
     },
 
+
     render: function() {
-        var that = this;
-        
         this.setElement(this.template());
         _.each(this.fieldsets(), this.renderFieldSet);
-        
         return this;
     },
 
@@ -251,7 +285,8 @@ _.extend(Form.prototype, {
         var that = this;
 
         var fieldsetView = new Fieldset({
-            fieldset: fieldset
+            fieldset: fieldset,
+            form: this
         });
 
         this.$el.append(fieldsetView.render().el);

@@ -1,11 +1,16 @@
-/*global describe, it, beforeEach, afterEach*/
+/*global window:true, describe, it, beforeEach, afterEach*/
 var assert = require('assert'),
     $ = require('jquery'),
     Backbone = require('backbone'),
     Form = require('../forms'),
     fields = require('../fields');
 
+// Setup a window for jquery to use.
+window = require("jsdom").jsdom().createWindow();
+$ = require('jquery/dist/jquery')(window);
+
 Backbone.$ = $;
+
 
 var mockField = {
     key: 'foo',
@@ -56,6 +61,23 @@ describe("initialize form spec", function() {
             return new Form();
         };
         assert.throws(schemalessForm);
+    });
+
+    it("should render a template", function() {
+        var field = new fields.TextField({
+            field: {
+                required: false,
+                key: 'foo',
+                widget: {
+                    title: 'bar',
+                    input_type: 'text'
+                }
+            }
+        });
+
+        assert.equal(field.render().$el.html(),
+            '<label for="foo"></label>\n' +
+            '<input type="text" id="bar" name="bar" />\n\n\n');
     });
 
     it("should initialize with schema", function() {

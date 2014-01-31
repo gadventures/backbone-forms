@@ -1,28 +1,5 @@
 var _ = require('lodash'),
-    Handlebars = require('handlebars'),
     Backbone = require('backbone');
-
-var fields = {
-    text: require('./templates/input_text.hbs'),
-    email: require('./templates/input_text.hbs'),
-    date: require('./templates/input_date.hbs'),
-    select: require('./templates/input_select.hbs'),
-    password: require('./templates/input_text.hbs'),
-    checkbox: require('./templates/input_checkbox.hbs'),
-    textarea: require('./templates/textarea.hbs')
-};
-
-var templates = {
-    field: require('./templates/field.hbs'),
-    field_errors: require('./templates/errors.hbs')
-};
-
-// Given an object that describes a field, call it within that fields
-// context with {{renderField}}
-Handlebars.registerHelper('renderWidget', function() {
-    var fieldTemplate = fields[this.widget.input_type];
-    return new Handlebars.SafeString(fieldTemplate(this));
-});
 
 var Field = Backbone.View.extend({
     tagName: 'li',
@@ -32,14 +9,11 @@ var Field = Backbone.View.extend({
 
         this.field = options.field;
         this.id = this.field.key;
-
-        if (options.templates) {
-            _.extend(templates, options.templates);
-        }
+        this.handlebars = options.handlebars;
 
         this.templates = {
-            field: templates.field,
-            errors: templates.field_errors
+            field: this.handlebars.templates.field,
+            errors: this.handlebars.templates.field_errors
         };
     },
 
