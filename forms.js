@@ -1,24 +1,10 @@
 var $ = require('jquery'),
-    fs = require('fs'),
     _ = require('lodash'),
+    Handlebars = require('./handlebars'),
     Backbone = require('backbone'),
     fields = require('./fields');
 
 Backbone.$ = $;
-
-var templates = {
-    form: fs.readFileSync('./templates/form.hbs'),
-    fieldset: fs.readFileSync('./templates/fieldset.hbs'),
-    field: fs.readFileSync('./templates/field.hbs'),
-    field_errors: fs.readFileSync('./templates/errors.hbs'),
-    text: fs.readFileSync('./templates/input_text.hbs'),
-    email: fs.readFileSync('./templates/input_text.hbs'),
-    date: fs.readFileSync('./templates/input_date.hbs'),
-    select: fs.readFileSync('./templates/input_select.hbs'),
-    password: fs.readFileSync('./templates/input_text.hbs'),
-    checkbox: fs.readFileSync('./templates/input_checkbox.hbs'),
-    textarea: fs.readFileSync('./templates/textarea.hbs')
-};
 
 var Fieldset = Backbone.View.extend({
     initialize: function(options) {
@@ -27,8 +13,7 @@ var Fieldset = Backbone.View.extend({
         var self = this;
 
         this.fieldset = options.fieldset;
-        this.handlebars = options.form.handlebars;
-        this.template = this.handlebars.templates.fieldset;
+        this.template = Handlebars.templates.fieldset;
     },
     getContextData: function() {
         return this.fieldset;
@@ -50,19 +35,7 @@ var Form = module.exports = Backbone.View.extend({
             throw new Error("You must pass a schema. See README");
         }
 
-        if (options.templates) {
-            _.extend(templates, options.templates);
-        }
-
-        this.handlebars = options.handlebars || require('handlebars');
-        this.handlebars.templates = {}; // Store compiled templates.
-        this._registerHandlebars();
-
-        _.each(templates, function(template, key) {
-            self.handlebars.templates[key] = self.handlebars.compile(template);
-        });
-
-        this.template = this.handlebars.templates.form;
+        this.template = Handlebars.templates.form;
 
         this.validateUrl = (options.validateUrl || this.validateUrl);
         this.schema = this._setSchema(options.schema);
@@ -171,17 +144,6 @@ _.extend(Form.prototype, {
         this.trigger('schema:change', this.schema);
         return schema;
     },
-
-    _registerHandlebars: function() {
-        // Given an object that describes a field, call it within that fields
-        // context with {{renderField}}
-        var self = this;
-        this.handlebars.registerHelper('renderWidget', function() {
-            var fieldTemplate = self.handlebars.templates[this.widget.input_type];
-            return new self.handlebars.SafeString(fieldTemplate(this));
-        });
-    },
-
 
     // Return fields that have errors.
     errors: function() {

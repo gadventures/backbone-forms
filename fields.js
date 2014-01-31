@@ -1,4 +1,5 @@
 var _ = require('lodash'),
+    Handlebars = require('./handlebars'),
     Backbone = require('backbone');
 
 var Field = Backbone.View.extend({
@@ -9,11 +10,10 @@ var Field = Backbone.View.extend({
 
         this.field = options.field;
         this.id = this.field.key;
-        this.handlebars = options.handlebars;
 
         this.templates = {
-            field: this.handlebars.templates.field,
-            errors: this.handlebars.templates.field_errors
+            field: Handlebars.templates.field,
+            errors: Handlebars.templates.field_errors
         };
     },
 
