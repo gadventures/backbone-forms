@@ -126,8 +126,9 @@ describe("clean spec", function() {
 
     it("should clean on hooked field", function() {
         var myForm = Form.extend({
-            clean_first_name: function(val) {
+            clean_first_name: function(data) {
                 // Reverse the string
+                var val = data.first_name;
                 return val.split("").reverse().join("");
             }
         });

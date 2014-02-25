@@ -173,7 +173,7 @@ _.extend(Form.prototype, {
             // Finally, check for any hooked functions in cleaning the field.
             var cleanFunc = "clean_" + key;
             if (typeof(this[cleanFunc]) === "function") {
-                data[key] = this[cleanFunc](data[key]);
+                data[key] = this[cleanFunc](data);
             }
         }, this);
         return data;
