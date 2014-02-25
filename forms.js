@@ -43,7 +43,6 @@ var Form = module.exports = Backbone.View.extend({
         this.bindings = {};
         this.bindingOptions = options.bindingOptions || null;
 
-
         // A model can be passed when preparing a binding. Each field will
         // be bound as they are created.
         if (this.bindingOptions) {
@@ -153,11 +152,9 @@ _.extend(Form.prototype, {
         });
     },
 
-    // Given we have full schema information, we can also do some
-    // client-side, inline validation. For now, let's push it to the server
-    // so we can test some Django integration.
-    validate: function(callback) {
-        var self = this;
+    // Called when validating form, returns a data object of fields and values
+    // being sent to the server for validation.
+    cleaned: function() {
         var data = {};
 
         // TODO: Instead of iterating over the schema here, we can probably
@@ -172,7 +169,22 @@ _.extend(Form.prototype, {
                 default:
                     data[key] = this.$('#' + key).val();
             }
-        });
+
+            // Finally, check for any hooked functions in cleaning the field.
+            var cleanFunc = "clean_" + key;
+            if (typeof(this[cleanFunc]) === "function") {
+                data[key] = this[cleanFunc](data[key]);
+            }
+        }, this);
+        return data;
+    },
+
+    // Given we have full schema information, we can also do some
+    // client-side, inline validation. For now, let's push it to the server
+    // so we can test some Django integration.
+    validate: function(callback) {
+        var self = this;
+        var data = this.cleaned();
 
         $.ajax({
             url: this.validateUrl,
@@ -235,7 +247,6 @@ _.extend(Form.prototype, {
     iter: function() {
         return this.fields;
     },
-
 
     render: function() {
         this.setElement(this.template());

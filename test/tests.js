@@ -1,16 +1,17 @@
 /*global window:true, describe, it, beforeEach, afterEach*/
+
+// Setup a window for jquery to use.
+window = require("jsdom").jsdom().createWindow();
+$ = require('jquery/dist/jquery')(window);
+
 var assert = require('assert'),
     $ = require('jquery'),
     Backbone = require('backbone'),
     Form = require('../forms'),
     fields = require('../fields');
 
-// Setup a window for jquery to use.
-window = require("jsdom").jsdom().createWindow();
-$ = require('jquery/dist/jquery')(window);
 
 Backbone.$ = $;
-
 
 var mockField = {
     key: 'foo',
@@ -55,6 +56,28 @@ var mockDateField = {
     }
 };
 
+var mockSchema = {
+    title: "ProfileForm",
+    fields: {
+        first_name: {
+            title: "first_name",
+            required: true,
+            label: "First Name",
+            error_messages: {
+                required: "This field is required",
+                invalid: "Enter a valid value."
+            },
+            min_length: null,
+            max_length: 50,
+            widget: {
+                title: "first_name",
+                input_type: "text"
+            }
+        }
+    }
+};
+
+
 describe("initialize form spec", function() {
     it("should fail without schema", function() {
         var schemalessForm = function() {
@@ -82,28 +105,42 @@ describe("initialize form spec", function() {
 
     it("should initialize with schema", function() {
         var form = new Form({
-            schema: {
-                title: "ProfileForm",
-                fields: {
-                    first_name: {
-                        title: "first_name",
-                        required: true,
-                        label: "First Name",
-                        error_messages: {
-                            required: "This field is required",
-                            invalid: "Enter a valid value."
-                        },
-                        min_length: null,
-                        max_length: 50,
-                        widget: {
-                            title: "first_name",
-                            input_type: "text"
-                        }
-                    }
-                }
-            }
+            schema: mockSchema
         });
         assert.ok(form);
+    });
+});
+
+describe("clean spec", function() {
+    it("should clean fields", function() {
+        var form = new Form({
+            schema: mockSchema
+        });
+
+        form.render();
+        form.$("#first_name").val("Foo");
+
+        var data = form.cleaned();
+        assert.equal(data.first_name, "Foo");
+    });
+
+    it("should clean on hooked field", function() {
+        var myForm = Form.extend({
+            clean_first_name: function(val) {
+                // Reverse the string
+                return val.split("").reverse().join("");
+            }
+        });
+
+        var form = new myForm({
+            schema: mockSchema
+        });
+
+        form.render();
+        form.$("#first_name").val("Foo");
+
+        var data = form.cleaned();
+        assert.equal(data.first_name, "ooF");
     });
 });
 
@@ -146,7 +183,7 @@ describe("date field spec", function() {
 
     it("should allow change on blank model attribute", function() {
         var MockModel = Backbone.Model.extend({});
-        
+
         var model = new MockModel();
         var bindings = dateField.bindings(model);
 
