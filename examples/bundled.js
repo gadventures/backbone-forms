@@ -278,7 +278,6 @@ var Form = module.exports = Backbone.View.extend({
         this.bindings = {};
         this.bindingOptions = options.bindingOptions || null;
 
-
         // A model can be passed when preparing a binding. Each field will
         // be bound as they are created.
         if (this.bindingOptions) {
@@ -388,11 +387,9 @@ _.extend(Form.prototype, {
         });
     },
 
-    // Given we have full schema information, we can also do some
-    // client-side, inline validation. For now, let's push it to the server
-    // so we can test some Django integration.
-    validate: function(callback) {
-        var self = this;
+    // Called when validating form, returns a data object of fields and values
+    // being sent to the server for validation.
+    cleaned: function() {
         var data = {};
 
         // TODO: Instead of iterating over the schema here, we can probably
@@ -407,7 +404,22 @@ _.extend(Form.prototype, {
                 default:
                     data[key] = this.$('#' + key).val();
             }
-        });
+
+            // Finally, check for any hooked functions in cleaning the field.
+            var cleanFunc = "clean_" + key;
+            if (typeof(this[cleanFunc]) === "function") {
+                data[key] = this[cleanFunc](data);
+            }
+        }, this);
+        return data;
+    },
+
+    // Given we have full schema information, we can also do some
+    // client-side, inline validation. For now, let's push it to the server
+    // so we can test some Django integration.
+    validate: function(callback) {
+        var self = this;
+        var data = this.cleaned();
 
         $.ajax({
             url: this.validateUrl,
@@ -471,7 +483,6 @@ _.extend(Form.prototype, {
         return this.fields;
     },
 
-
     render: function() {
         this.setElement(this.template());
         _.each(this.fieldsets(), this.renderFieldSet);
@@ -530,6 +541,7 @@ _.extend(Form.prototype, {
 });
 
 },{"./fields":2,"./handlebars":4,"backbone":5,"jquery":22,"lodash":23}],4:[function(require,module,exports){
+/*global __dirname*/
 var Handlebars = require('handlebars'),
     fs = require('fs');
 
@@ -16599,7 +16611,7 @@ return jQuery;
 }));
 
 },{}],23:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/**
+(function (global){/**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modern -o ./dist/lodash.js`
@@ -23384,7 +23396,7 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
     root._ = _;
   }
 }.call(this));
-
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],24:[function(require,module,exports){
 
 },{}]},{},[1])

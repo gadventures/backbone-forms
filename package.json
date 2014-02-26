@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "build": "browserify examples/main.js -o examples/bundled.js"
   },
   "browserify": {
       "transform": ["brfs"]
