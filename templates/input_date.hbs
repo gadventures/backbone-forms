@@ -1,7 +1,7 @@
 {{! SelectDateWidget renderer from django.forms.extras.widgets }}
-
+<input id='{{key}}' type='hidden'>
 {{#widget.choices}}
-  <select id='{{../key}}_{{this.title}}' name='{{../key}}_{{this.title}}'>
+  <select id='{{../key}}_{{this.title}}' data-type='{{this.title}}' name='{{../key}}_{{this.title}}'>
   {{#this.data}}
     <option value='{{this.key}}'>{{this.value}}</option>
   {{/this.data}}

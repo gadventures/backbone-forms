@@ -13,70 +13,10 @@ var assert = require('assert'),
 
 Backbone.$ = $;
 
-var mockField = {
-    key: 'foo',
-    label: 'Foo',
-    errors: [],
-    widget: {
-        input_type: 'text',
-        choices: []
-    }
-};
-
-var mockDateField = {
-    key: 'date',
-    label: 'Date',
-    errors: [],
-    binding: 'issue_date',
-    widget: {
-        input_type: 'date',
-        choices: [
-            {
-                title: 'day',
-                data: [
-                    { value: 1, key: 1},
-                    { value: 2, key: 2}
-                ]
-            },
-            {
-                title: 'month',
-                data: [
-                    { value: "January", key: 1},
-                    { value: "February", key: 2}
-                ]
-            },
-            {
-                title: 'year',
-                data: [
-                    { value: 1992, key: 1992 },
-                    { value: 1993, key: 1993 }
-                ]
-            }
-        ]
-    }
-};
-
-var mockSchema = {
-    title: "ProfileForm",
-    fields: {
-        first_name: {
-            title: "first_name",
-            required: true,
-            label: "First Name",
-            error_messages: {
-                required: "This field is required",
-                invalid: "Enter a valid value."
-            },
-            min_length: null,
-            max_length: 50,
-            widget: {
-                title: "first_name",
-                input_type: "text"
-            }
-        }
-    }
-};
-
+var fixtures = require('./fixtures'),
+    mockSchema = fixtures.mockSchema,
+    mockDateField = fixtures.mockDateField,
+    mockField = fixtures.mockField;
 
 describe("initialize form spec", function() {
     it("should fail without schema", function() {
@@ -152,6 +92,11 @@ describe("date field spec", function() {
         dateField = new fields.DateField({
             field: mockDateField
         });
+        dateField.date = {
+            day: null,
+            year: null,
+            month: null
+        };
     });
 
     afterEach(function() {
@@ -160,6 +105,11 @@ describe("date field spec", function() {
 
     it("should initialize", function() {
         assert.ok(dateField);
+        assert.deepEqual(dateField.date, {
+            day: null,
+            year: null,
+            month: null
+        });
     });
 
     it("should render", function() {
@@ -167,52 +117,50 @@ describe("date field spec", function() {
         assert.ok(dateField);
     });
 
-    // What should we test from the Binding? Given the onGet function,
-    // should test for various scenarios (e.g. if value is null, a single
-    // item, etc.)
-    it("should contain bindings", function() {
-        var bindings = dateField.bindings();
-        assert.ok(bindings['#date_day']);
-        assert.equal(bindings['#date_day'].observe, 'issue_date');
-
-        assert.ok(bindings['#date_month']);
-        assert.equal(bindings['#date_month'].observe, 'issue_date');
-
-        assert.ok(bindings['#date_year']);
-        assert.equal(bindings['#date_year'].observe, 'issue_date');
+    it("should updateLocalDate correctly", function() {
+        dateField.updateLocalDate("day", "2");
+        assert.equal(dateField.date.day, "2");
     });
 
-    it("should allow change on blank model attribute", function() {
+    it("should set model field when all fields valid", function() {
         var MockModel = Backbone.Model.extend({});
-
         var model = new MockModel();
-        var bindings = dateField.bindings(model);
 
-        var binding = bindings['#date_day'];
-        model.set({issue_date: binding.onSet('06', bindings)});
-        assert.equal(model.get('issue_date'), '--06');
+        dateField.bindings(model);
 
-        binding = bindings['#date_year'];
-        model.set({issue_date: binding.onSet(2002, bindings)});
-        assert.equal(model.get('issue_date'), '2002--06');
+        dateField.updateLocalDate("day", "22");
+        assert.equal(model.get("issue_date"), null);
 
-        binding = bindings['#date_month'];
-        model.set({issue_date: binding.onSet('05', bindings)});
-        assert.equal(model.get('issue_date'), '2002-05-06');
+        dateField.updateLocalDate("month", "02");
+        dateField.updateLocalDate("year", "2000");
+
+        assert.equal(model.get("issue_date"), "2000-02-22");
     });
 
-    it("should allow change on existing model attribute", function() {
-        var MockModel = Backbone.Model.extend({
-            defaults: {
-                issue_date: "2002-05-06"
-            }
+    it("should not set local date if model has null or undefined values", function() {
+        var MockModel = Backbone.Model.extend({});
+        var model = new MockModel();
+
+        dateField.setLocalDate(model);
+        assert.deepEqual(dateField.date, {
+            day: null,
+            year: null,
+            month: null
         });
 
-        var model = new MockModel();
-        var bindings = dateField.bindings(model);
+    });
 
-        var binding = bindings['#date_day'];
-        model.set({issue_date: binding.onSet('22', bindings)});
-        assert.equal(model.get('issue_date'), '2002-05-22');
+    it("should set local date only when model has valid values", function() {
+        var MockModel = Backbone.Model.extend({});
+        var model = new MockModel({
+            issue_date: "1999-01-30"
+        });
+
+        dateField.setLocalDate(model);
+        assert.deepEqual(dateField.date, {
+            day: "30",
+            month: "01",
+            year: "1999"
+        });
     });
 });

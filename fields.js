@@ -26,7 +26,7 @@ var Field = Backbone.View.extend({
         this.field.errors = schema.errors[this.id] || [];
         this.renderErrors();
     },
-    
+
     renderErrors: function() {
         this.$(this.errorSelector).remove();
         this.$el.append(this.templates.errors(this.getContextData()));
@@ -88,71 +88,86 @@ var Field = Backbone.View.extend({
 });
 
 var DateField = Field.extend({
-    _bindTo: function(model, dateType) {
-        var field = this.field;
+    date: {
+        day: null,
+        year: null,
+        month: null
+    },
 
-        var dateTypeIndex = ['year', 'month', 'day'].indexOf(dateType);
+    dateAsString: function() {
+        return [
+            this.date.year,
+            this.date.month,
+            this.date.day
+        ].join("-");
+    },
 
-        var collection = _.find(field.widget.choices, function(choice) {
-            return choice.title === dateType;
-        }).data;
+    bindings: function(model) {
+        var bindings = Field.prototype.bindings.call(this, model);
 
-        // On initial values, we need to create a blank placeholder date.
-        var makeBlankDate = function(value, index) {
-            return _(3).times(function(n) {
-                if (n === index) {
-                    return value;
-                } else {
-                    return "-";
-                }
-                return;
-            }).join("");
-        };
+        // Watch for this trigger. It can be fired off whenever updateLocalDate
+        // is set, and all parts of the date are ready to be set on the model.
+        this.on("setModel", function() {
+            console.log("Setting model", this.dateAsString());
+            model.set(this.field.binding, this.dateAsString());
+        });
 
-        return {
-            observe: field.binding,
-            selectOptions: {
-                collection: function() { return collection; },
-                labelPath: 'value',
-                valuePath: 'key'
-            },
-            onSet: function(value, options) {
-                if (!value) {
-                    return;
-                }
-                var existingDate = model.get(field.binding);
-                if (!existingDate) {
-                    existingDate = makeBlankDate(value, dateTypeIndex);
-                }
-                var dateItems = existingDate.split('-');
-                return _.reduce(dateItems, function(memo, item, index) {
-                    if (index === dateTypeIndex) {
-                        memo.push(value);
-                    } else {
-                        memo.push(item);
-                    }
-                    return memo;
-                }, []).join('-');
-            },
-            onGet: function(value, options) {
-                if (!value) {
-                    return;
-                }
-                var dateItems = value.split('-');
-                if (!dateItems[dateTypeIndex]) {
-                    return;
-                }
-                return dateItems[dateTypeIndex];
-            }
+        this.setLocalDate(model);
+
+        return bindings;
+    },
+
+    // Set the local date from the model field.
+    setLocalDate: function(model) {
+        var val = model.get(this.field.binding);
+
+        if (_.isUndefined(val)) return;
+        if (_.isNull(val)) return;
+
+        var parts = val.split("-");
+        this.date = {
+            year: parts[0],
+            month: parts[1],
+            day: parts[2]
         };
     },
 
-    getBindingContext: function(model) {
-        var context = {};
-        context['#' + this.field.key + '_day'] = this._bindTo(model, 'day');
-        context['#' + this.field.key + '_month'] = this._bindTo(model, 'month');
-        context['#' + this.field.key + '_year'] = this._bindTo(model, 'year');
-        return context;
+    updateLocalDate: function(type, value) {
+        this.date[type] = value;
+
+        var valid = _.reject(this.date, function(val) {
+            return val === "" || _.isNull(val);
+        });
+
+        // All parts of the date are valid. Set that model.
+        if (valid.length === 3) {
+            this.trigger("setModel");
+        }
+    },
+
+    onSelectChange: function(ev) {
+        var $target = this.$("#" + ev.currentTarget.id);
+        var type = $target.data("type");
+        this.updateLocalDate(type, $target.val());
+    },
+
+
+    // Along with our regular binding, we need to bind the year, day, and month
+    // fields to our own tracking, setting our actual model-bound field to a new
+    // value whenever all select boxes are valid.
+    render: function() {
+        Field.prototype.render.call(this, arguments);
+
+        // Set the rendered elements with their values.
+        if (this.date.day) this.$("#" + this.field.key + "_day").val(this.date.day);
+        if (this.date.year) this.$("#" + this.field.key + "_year").val(this.date.year);
+        if (this.date.month) this.$("#" + this.field.key + "_month").val(this.date.month);
+
+        this.$("#" + this.field.key + "_day").change(this.onSelectChange);
+        this.$("#" + this.field.key + "_month").change(this.onSelectChange);
+        this.$("#" + this.field.key + "_year").change(this.onSelectChange);
+
+        return this;
     }
 });
 
