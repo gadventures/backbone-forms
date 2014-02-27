@@ -113,6 +113,11 @@ _.extend(Form.prototype, {
         });
     },
 
+    // Return the appropriate field from the model for a form field.
+    getModelField: function(field) {
+        return this.bindings["#" + field].observe;
+    },
+
     // Return all, or a selective list of bound fields.
     _getFields: function(fields) {
         fields = fields || _.keys(this.schema.fields);
