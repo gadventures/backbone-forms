@@ -1,6 +1,6 @@
 {
   "name": "backbone-forms",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Render forms based on an arbitrary definition",
   "main": "forms.js",
   "directories": {
