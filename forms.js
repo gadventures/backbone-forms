@@ -152,9 +152,14 @@ _.extend(Form.prototype, {
     // Return fields that have errors.
     errors: function() {
         var errorFields = _.keys(this.schema.errors);
-        return _.filter(this.fields, function(instance, key, list) {
+        var fieldErrors = _.filter(this.fields, function(instance, key, list) {
             return _.contains(errorFields, instance.id);
         });
+
+        return {
+            all: this.schema.errors.__all__,
+            fields: fieldErrors
+        };
     },
 
     // Called when validating form, returns a data object of fields and values
