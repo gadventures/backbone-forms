@@ -7,13 +7,14 @@ var $ = require('jquery'),
 Backbone.$ = $;
 
 var Fieldset = Backbone.View.extend({
+    template: Handlebars.templates.fieldset,
+
     initialize: function(options) {
         options = (options || {});
         _.bindAll(this);
         var self = this;
 
         this.fieldset = options.fieldset;
-        this.template = Handlebars.templates.fieldset;
     },
     getContextData: function() {
         return this.fieldset;
@@ -25,7 +26,10 @@ var Fieldset = Backbone.View.extend({
     }
 });
 
-var Form = module.exports = Backbone.View.extend({
+var Form = Backbone.View.extend({
+    template: Handlebars.templates.form,
+    fieldsetClass: Fieldset,
+
     initialize: function(options) {
         options = (options || {});
         _.bindAll(this, '_setSchema', 'renderFieldSet');
@@ -34,8 +38,6 @@ var Form = module.exports = Backbone.View.extend({
         if (_.isEmpty(options.schema)) {
             throw new Error("You must pass a schema. See README");
         }
-
-        this.template = Handlebars.templates.form;
 
         this.validateUrl = (options.validateUrl || this.validateUrl);
         this.schema = this._setSchema(options.schema);
@@ -267,7 +269,7 @@ _.extend(Form.prototype, {
     renderFieldSet: function(fieldset) {
         var that = this;
 
-        var fieldsetView = new Fieldset({
+        var fieldsetView = new this.fieldsetClass({
             fieldset: fieldset,
             form: this
         });
@@ -314,3 +316,8 @@ _.extend(Form.prototype, {
         return modelBindings;
     }
 });
+
+module.exports = {
+    Form: Form,
+    Fieldset: Fieldset
+};

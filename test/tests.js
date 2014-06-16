@@ -7,7 +7,7 @@ $ = require('jquery/dist/jquery')(window);
 var assert = require('assert'),
     $ = require('jquery'),
     Backbone = require('backbone'),
-    Form = require('../forms'),
+    Form = require('../forms').Form,
     fields = require('../fields');
 
 
