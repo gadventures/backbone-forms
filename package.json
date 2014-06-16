@@ -1,7 +1,7 @@
 {
   "name": "backbone-forms",
-  "version": "0.0.5",
-  "description": "Render forms based on an arbitrary definition",
+  "version": "0.0.6",
+  "description": "Render forms based on schema definition",
   "main": "forms.js",
   "directories": {
     "test": "test"
