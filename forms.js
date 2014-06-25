@@ -39,7 +39,7 @@ var Form = Backbone.View.extend({
             throw new Error("You must pass a schema. See README");
         }
 
-        this.validateUrl = (options.validateUrl || this.validateUrl);
+        this.validateUrl = (_.result(options, 'validateUrl') || _.result(this, 'validateUrl'));
         this.schema = this._setSchema(options.schema);
 
         this.bindings = {};
