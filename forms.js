@@ -4,8 +4,6 @@ var $ = require('jquery'),
     Backbone = require('backbone'),
     fields = require('./fields');
 
-Backbone.$ = $;
-
 var Fieldset = Backbone.View.extend({
     template: Handlebars.templates.fieldset,
 
@@ -198,7 +196,7 @@ _.extend(Form.prototype, {
         var self = this;
         var data = this.cleaned();
 
-        $.ajax({
+        Backbone.$.ajax({
             url: this.validateUrl,
             type: 'POST',
             contentType: 'application/json',
