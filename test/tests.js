@@ -40,7 +40,7 @@ describe("initialize form spec", function() {
 
         assert.equal(field.render().$el.html(),
             '<label for="foo"></label>\n' +
-            '<input type="text" id="bar" name="bar" />\n\n\n');
+            '<input type="text" id="bar" name="bar" />\n\n\n\n');
     });
 
     it("should initialize with schema", function() {
