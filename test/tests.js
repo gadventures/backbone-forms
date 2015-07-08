@@ -1,24 +1,26 @@
-/*global window:true, describe, it, beforeEach, afterEach*/
-
-// Setup a window for jquery to use.
-window = require("jsdom").jsdom().createWindow();
-$ = require('jquery/dist/jquery')(window);
-
 var assert = require('assert'),
-    $ = require('jquery'),
+    jsdom = require('mocha-jsdom'),
     Backbone = require('backbone'),
     Form = require('../forms').Form,
     fields = require('../fields');
-
-
-Backbone.$ = $;
 
 var fixtures = require('./fixtures'),
     mockSchema = fixtures.mockSchema,
     mockDateField = fixtures.mockDateField,
     mockField = fixtures.mockField;
 
+
+// Setup a DOM for jquery to use
+jsdom()
+
+before(function () {
+    var $ = require('jquery')(window)
+    Backbone.$ = $;
+})
+
+
 describe("initialize form spec", function() {
+
     it("should fail without schema", function() {
         var schemalessForm = function() {
             return new Form();
@@ -40,7 +42,7 @@ describe("initialize form spec", function() {
 
         assert.equal(field.render().$el.html(),
             '<label for="foo"></label>\n' +
-            '<input type="text" id="bar" name="bar" />\n\n\n\n');
+            '<input type="text" id="bar" name="bar">\n\n\n\n');
     });
 
     it("should initialize with schema", function() {
@@ -51,7 +53,9 @@ describe("initialize form spec", function() {
     });
 });
 
+
 describe("clean spec", function() {
+
     it("should clean fields", function() {
         var form = new Form({
             schema: mockSchema
@@ -84,6 +88,7 @@ describe("clean spec", function() {
         assert.equal(data.first_name, "ooF");
     });
 });
+
 
 describe("date field spec", function() {
     var dateField;
