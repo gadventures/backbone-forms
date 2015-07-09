@@ -275,7 +275,7 @@ _.extend(Form.prototype, {
         this.$el.append(fieldsetView.render().el);
 
         // Fieldset is rendered, add fields to it.
-        var $fieldsContainer = this.$('.fields-list', fieldsetView.$el);
+        var $fieldsContainer = $('.fields-list', fieldsetView.$el);
         _.each(fieldset.fields, function(field) {
             var fieldElement = field.render().el;
             $fieldsContainer.append(fieldElement);
