@@ -2,6 +2,7 @@ var $ = require('jquery'),
     _ = require('lodash'),
     Handlebars = require('./handlebars'),
     Backbone = require('backbone'),
+    logger = require('bows')('forms'),
     fields = require('./fields');
 
 var Fieldset = Backbone.View.extend({
@@ -122,7 +123,7 @@ _.extend(Form.prototype, {
     _getFields: function(fields) {
         fields = fields || _.keys(this.schema.fields);
         return _.filter(this.fields, function(instance, index, list) {
-            return _.contains(fields, instance.id);
+            return _.includes(fields, instance.id);
         });
     },
 
@@ -143,7 +144,7 @@ _.extend(Form.prototype, {
         if (schema.errors) {
             this.success = (_.keys(schema.errors).length === 0);
         } else {
-            console.log("Could not identify errors in schema. Cannot reliably determine if form is successful.");
+            logger("Could not identify errors in schema. Cannot reliably determine if form is successful.");
         }
         this.trigger('schema:change', this.schema);
         return schema;
@@ -153,7 +154,7 @@ _.extend(Form.prototype, {
     errors: function() {
         var errorFields = _.keys(this.schema.errors);
         var fieldErrors = _.filter(this.fields, function(instance, key, list) {
-            return _.contains(errorFields, instance.id);
+            return _.includes(errorFields, instance.id);
         });
 
         return {
@@ -166,26 +167,27 @@ _.extend(Form.prototype, {
     // being sent to the server for validation.
     cleaned: function() {
         var data = {};
+        var self = this;
 
         // TODO: Instead of iterating over the schema here, we can probably
         // get away with simply sending the model as a JSON stringify.
-        _.each(this.schema.fields, function(field, key, list) {
+        _.forEach(this.schema.fields, function(field, key, list) {
             switch (field.widget.input_type) {
                 case 'checkbox':
-                    if (this.$('#' + key).is(':checked')) {
-                        data[key] = this.$('#' + key).val();
+                    if (self.$('#' + key).is(':checked')) {
+                        data[key] = self.$('#' + key).val();
                     }
                     break;
                 default:
-                    data[key] = this.$('#' + key).val();
+                    data[key] = self.$('#' + key).val();
             }
 
             // Finally, check for any hooked functions in cleaning the field.
             var cleanFunc = "clean_" + key;
-            if (typeof(this[cleanFunc]) === "function") {
-                data[key] = this[cleanFunc](data);
+            if (typeof(self[cleanFunc]) === "function") {
+                data[key] = self[cleanFunc](data);
             }
-        }, this);
+        });
         return data;
     },
 
@@ -260,7 +262,7 @@ _.extend(Form.prototype, {
 
     render: function() {
         this.setElement(this.template());
-        _.each(this.fieldsets(), this.renderFieldSet);
+        _.forEach(this.fieldsets(), this.renderFieldSet);
         return this;
     },
 
@@ -276,7 +278,7 @@ _.extend(Form.prototype, {
 
         // Fieldset is rendered, add fields to it.
         var $fieldsContainer = $('.fields-list', fieldsetView.$el);
-        _.each(fieldset.fields, function(field) {
+        _.forEach(fieldset.fields, function(field) {
             var fieldElement = field.render().el;
             $fieldsContainer.append(fieldElement);
         });
@@ -292,7 +294,7 @@ _.extend(Form.prototype, {
         var modelAttribs = _.keys(model.attributes);
 
         // map the field selectors to their model observables
-        _.each(this.bindings, function(obj, key) {
+        _.forEach(this.bindings, function(obj, key) {
             observables[key] = obj.observe;
         });
 
@@ -301,11 +303,11 @@ _.extend(Form.prototype, {
          * at just the top level of nested resources
          */
         var modelObservables = _.filter(observables, function(value, key) {
-            return _.contains(modelAttribs, _.first(value.split('.')));
+            return _.includes(modelAttribs, _.first(value.split('.')));
         });
 
-        _.each(observables, function(value, key) {
-            if(_.contains(modelObservables, value)) {
+        _.forEach(observables, function(value, key) {
+            if(_.includes(modelObservables, value)) {
                 selectors.push(key);
             }
         });

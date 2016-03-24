@@ -1,5 +1,6 @@
 var _ = require('lodash'),
     Handlebars = require('./handlebars'),
+    logger = require('bows')('fields'),
     Backbone = require('backbone');
 
 var Field = Backbone.View.extend({
@@ -108,7 +109,7 @@ var DateField = Field.extend({
         // Watch for this trigger. It can be fired off whenever updateLocalDate
         // is set, and all parts of the date are ready to be set on the model.
         this.on("setModel", function() {
-            console.log("Setting model", this.dateAsString());
+            logger("Setting model", this.dateAsString());
             model.set(this.field.binding, this.dateAsString());
         });
 

@@ -352,7 +352,7 @@ _.extend(Form.prototype, {
     _getFields: function(fields) {
         fields = fields || _.keys(this.schema.fields);
         return _.filter(this.fields, function(instance, index, list) {
-            return _.contains(fields, instance.id);
+            return _.includes(fields, instance.id);
         });
     },
 
@@ -383,7 +383,7 @@ _.extend(Form.prototype, {
     errors: function() {
         var errorFields = _.keys(this.schema.errors);
         return _.filter(this.fields, function(instance, key, list) {
-            return _.contains(errorFields, instance.id);
+            return _.includes(errorFields, instance.id);
         });
     },
 
@@ -526,11 +526,11 @@ _.extend(Form.prototype, {
          * at just the top level of nested resources
          */
         var modelObservables = _.filter(observables, function(value, key) {
-            return _.contains(modelAttribs, _.first(value.split('.')));
+            return _.includes(modelAttribs, _.first(value.split('.')));
         });
 
         _.each(observables, function(value, key) {
-            if(_.contains(modelObservables, value)) {
+            if(_.includes(modelObservables, value)) {
                 selectors.push(key);
             }
         });
