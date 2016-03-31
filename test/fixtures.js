@@ -43,7 +43,6 @@ var mockDateField = {
 
 var mockSchema = {
     title: "ProfileForm",
-    errors: [],
     fields: {
         first_name: {
             title: "first_name",

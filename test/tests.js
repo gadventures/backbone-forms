@@ -1,12 +1,5 @@
-
-// Pretend to be a browser with a DOM
-document = require('jsdom').jsdom();
-window = document.defaultView;
-window.jQuery = jQuery = window.$ = $ = require('jquery');
-// Mock localStorage for bows logging.
-window.localStorage = {};
-
 var assert = require('assert'),
+    jsdom = require('mocha-jsdom'),
     Backbone = require('backbone'),
     Form = require('../forms').Form,
     fields = require('../fields');
@@ -16,12 +9,18 @@ var fixtures = require('./fixtures'),
     mockDateField = fixtures.mockDateField,
     mockField = fixtures.mockField;
 
+
+// Setup a DOM for jquery to use
+jsdom()
+
 before(function () {
-    Backbone.$ = window.$;
-});
+    var $ = require('jquery')(window)
+    Backbone.$ = $;
+})
+
 
 describe("initialize form spec", function() {
-     
+
     it("should fail without schema", function() {
         var schemalessForm = function() {
             return new Form();
@@ -43,7 +42,7 @@ describe("initialize form spec", function() {
 
         assert.equal(field.render().$el.html(),
             '<label for="foo"></label>\n' +
-            '<input type="text" id="bar" name="bar">\n\n');
+            '<input type="text" id="bar" name="bar">\n\n\n\n');
     });
 
     it("should initialize with schema", function() {
