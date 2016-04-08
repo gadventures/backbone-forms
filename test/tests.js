@@ -1,23 +1,20 @@
-var assert = require('assert'),
-    jsdom = require('mocha-jsdom'),
-    Backbone = require('backbone'),
-    Form = require('../forms').Form,
-    fields = require('../fields');
+// Setup a DOM for jquery to use
+document = require('jsdom').jsdom();
+window = document.defaultView;
+window.jQuery = jQuery = window.$ = $ = require('jquery');
+// Mock localStorage for bows logging.
+window.localStorage = {};
 
-var fixtures = require('./fixtures'),
+var Backbone = require('backbone'),
+    assert = require('assert'),
+    Form = require('../forms').Form,
+    fields = require('../fields'),
+    fixtures = require('./fixtures'),
     mockSchema = fixtures.mockSchema,
     mockDateField = fixtures.mockDateField,
     mockField = fixtures.mockField;
 
-
-// Setup a DOM for jquery to use
-jsdom()
-
-before(function () {
-    var $ = require('jquery')(window)
-    Backbone.$ = $;
-})
-
+Backbone.$ = $;
 
 describe("initialize form spec", function() {
 
@@ -42,7 +39,7 @@ describe("initialize form spec", function() {
 
         assert.equal(field.render().$el.html(),
             '<label for="foo"></label>\n' +
-            '<input type="text" id="bar" name="bar">\n\n\n\n');
+            '<input type="text" id="bar" name="bar">\n\n');
     });
 
     it("should initialize with schema", function() {

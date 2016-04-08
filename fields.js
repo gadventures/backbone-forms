@@ -1,12 +1,13 @@
-var _ = require('lodash'),
+var _ = require('underscore'),
     Handlebars = require('./handlebars'),
-    Backbone = require('backbone');
+    Backbone = require('backbone'),
+    logger = require('bows')('fields');
 
 var Field = Backbone.View.extend({
     tagName: 'li',
     errorSelector: '.field-errors',
     initialize: function(options) {
-        _.bindAll(this);
+        _.bindAll.apply(_, [this].concat(_.functions(this)));
 
         this.field = options.field;
         this.id = this.field.key;
@@ -108,7 +109,7 @@ var DateField = Field.extend({
         // Watch for this trigger. It can be fired off whenever updateLocalDate
         // is set, and all parts of the date are ready to be set on the model.
         this.on("setModel", function() {
-            console.log("Setting model", this.dateAsString());
+            logger("Setting model", this.dateAsString());
             model.set(this.field.binding, this.dateAsString());
         });
 
