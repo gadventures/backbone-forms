@@ -1,7 +1,8 @@
 var $ = require('jquery'),
-    _ = require('lodash'),
+    _ = require('underscore'),
     Handlebars = require('./handlebars'),
     Backbone = require('backbone'),
+    logger = require('bows')('forms'),
     fields = require('./fields');
 
 var Fieldset = Backbone.View.extend({
@@ -9,7 +10,7 @@ var Fieldset = Backbone.View.extend({
 
     initialize: function(options) {
         options = (options || {});
-        _.bindAll(this);
+        _.bindAll.apply(_, [this].concat(_.functions(this)));
         var self = this;
 
         this.fieldset = options.fieldset;
@@ -63,7 +64,7 @@ _.extend(Form.prototype, {
     // fields for other purposes can be done via the initialized fieldset.
     _initializeFields: function() {
         var self = this;
-        var formFields = _.cloneDeep(this.schema.fields);
+        var formFields = _.extend({}, this.schema.fields);
 
         return _.map(formFields, function(field, index, list) {
             // Create a new instance of the field based on the widget input
@@ -143,7 +144,7 @@ _.extend(Form.prototype, {
         if (schema.errors) {
             this.success = (_.keys(schema.errors).length === 0);
         } else {
-            console.log("Could not identify errors in schema. Cannot reliably determine if form is successful.");
+            logger("Could not identify errors in schema. Cannot reliably determine if form is successful.");
         }
         this.trigger('schema:change', this.schema);
         return schema;
@@ -239,7 +240,7 @@ _.extend(Form.prototype, {
         return _.map(this.schema.fieldsets, function(fieldset, key, list) {
             // For any fieldset that actually has fields listed, we need to
             // update those with real fields.
-            var fieldsetInstance = _.cloneDeep(fieldset);
+            var fieldsetInstance = _.extend({}, fieldset);
             if (fieldsetInstance.hasOwnProperty('fields')) {
                 _.extend(fieldsetInstance.fields, that._getFields(fieldsetInstance.fields));
             }
